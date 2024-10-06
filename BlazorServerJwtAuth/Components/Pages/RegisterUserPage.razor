@@ -1,0 +1,82 @@
+﻿
+@page "/register"
+@rendermode InteractiveServer
+
+<PageTitle>Register</PageTitle>
+
+
+<div class="container">
+    <div class="row" >
+        <div class="col-sm-4" >
+            <h2>LOGIN</h2>
+
+            <EditForm Model="@registerDTO" OnValidSubmit="RegisterClicked">
+                <DataAnnotationsValidator/>
+                <div class="form-group" >
+                    <label class="form-label" > Name </label>
+                    <InputText @bind-Value="registerDTO.Name" class="form-control"></InputText>
+                </div
+
+                  <div class="form-group" >
+                    <label class="form-label" > Email Address </label>
+                    <InputText @bind-Value="registerDTO.Email" class="form-control"></InputText>
+                </div>
+
+      
+
+                <div class = "form-group mt-3" >
+                    <label class="form-label" > Password </label>
+                    <InputText @bind-Value="registerDTO.Password" class="form-control"></InputText>
+
+                </div>
+
+
+                <div class="form-group" >
+                    <label class="form-label" > Confirm Password </label>
+                    <InputText @bind-Value="registerDTO.ConfirmPassword" class="form-control"></InputText>
+                </div>
+
+                
+                <div class = "form-group mt-3" >
+                   <button class="btn btn-primary" type="submit"> REGISTER </button>
+                </div>
+            
+                <ValidationSummary/>
+
+            </EditForm>
+
+
+        </div>
+
+    </div>
+
+</div>
+
+@code {
+    public RegisterDTO registerDTO = new();
+
+
+    async Task RegisterClicked()
+    {
+        Console.WriteLine("CLICK OKE");
+        RegistrationResponse registrationResponse = await accountService.RegiserService(registerDTO);
+
+        if (!registrationResponse.Flag)
+        {
+            await js.InvokeVoidAsync("alert", registrationResponse.Message);
+            return;
+        }
+
+        await js.InvokeVoidAsync("alert", registrationResponse.Message);
+        registerDTO = new();
+        NavManager.NavigateTo("/login", forceLoad: true);    
+
+        return;
+
+     
+
+
+    }
+
+
+}

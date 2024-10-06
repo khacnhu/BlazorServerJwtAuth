@@ -1,0 +1,64 @@
+﻿
+@page "/login"
+@rendermode InteractiveServer
+<PageTitle>Login</PageTitle>
+
+
+<div class="container">
+    <div class="row" >
+        <div class="col-sm-4" >
+            <h2>LOGIN</h2>
+
+            <EditForm Model="@Login" OnValidSubmit="LoginClicked" >
+                <DataAnnotationsValidator/>
+                <div class="form-group" >
+                    <label class="form-label" > Email Address </label>
+                    <InputText @bind-Value="Login.Email" class="form-control" ></InputText>
+                </div>
+
+                <div class = "form-group mt-3" >
+                    <label class="form-label" > Password </label>
+                    <InputText @bind-Value="Login.Password" class="form-control" ></InputText>
+
+                </div>
+
+                
+                <div class = "form-group mt-3" >
+                   <button class="btn btn-primary" type="submit"> Login </button>
+                </div>
+            
+                <ValidationSummary/>
+
+            </EditForm>
+
+
+        </div>
+
+    </div>
+
+</div>
+
+@code {
+    public LoginDTO Login = new();
+
+
+    async Task LoginClicked()
+    {
+        Console.WriteLine("CLICK OKE");
+        LoginResponse loginResponse = await accountService.LoginService(Login);
+
+        if(!loginResponse.Flag)
+        {
+            await js.InvokeVoidAsync("alert", loginResponse.Message);
+            return;
+        }
+
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
+        customAuthStateProvider.UpdateAuthenticationState(loginResponse.JWTToken);
+        NavManager.NavigateTo("/weather", forceLoad: true);    
+
+
+    }
+
+
+}
