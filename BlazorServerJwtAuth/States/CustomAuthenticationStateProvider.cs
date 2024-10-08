@@ -1,4 +1,5 @@
 ﻿using BlazorServerJwtAuth.DTOs;
+using BlazorServerJwtAuth.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Identity.Client;
 using Microsoft.IdentityModel.Tokens;
@@ -20,7 +21,7 @@ namespace BlazorServerJwtAuth.States
                     return await Task.FromResult(new AuthenticationState(anonynous));
                 }
 
-                var getUserClaims = DecryptToken(Constants.JwtToken);
+                var getUserClaims = DecryptJWTService.DecryptToken(Constants.JwtToken);
                 if (getUserClaims == null) return await Task.FromResult(new AuthenticationState(anonynous));
 
                 var claimsPrincipal = SetClaimPricipal(getUserClaims);
@@ -45,10 +46,11 @@ namespace BlazorServerJwtAuth.States
                     new List<Claim>
                     {
                         new(ClaimTypes.Name, claims.Name!),
-                        new(ClaimTypes.Email, claims.Email!)
+                        new(ClaimTypes.Email, claims.Email!),
+                        new(ClaimTypes.Role, claims.Role!)
                     }, "JwtAuth"
 
-                ));
+                )); ;
 
         }
 
@@ -60,7 +62,7 @@ namespace BlazorServerJwtAuth.States
             if (!string.IsNullOrEmpty(jwtToken))
             {
                 Constants.JwtToken = jwtToken;
-                var getUserClaims = DecryptToken(jwtToken);
+                var getUserClaims = DecryptJWTService.DecryptToken(jwtToken);
                 claimsPrincipal = SetClaimPricipal(getUserClaims);
             }
             else
@@ -72,21 +74,7 @@ namespace BlazorServerJwtAuth.States
 
         }
 
-        public static CustomerUserClaims DecryptToken(string jwtToken) 
-        {
-            if (string.IsNullOrEmpty(jwtToken)) return new CustomerUserClaims();
-            var handler = new JwtSecurityTokenHandler();
-
-            var token = handler.ReadJwtToken(jwtToken);
-
-
-            var name = token.Claims.FirstOrDefault(e => e.Type == ClaimTypes.Name);
-            var email = token.Claims.FirstOrDefault(e => e.Type == ClaimTypes.Email);
-
-            return new CustomerUserClaims(name!.Value, email!.Value);
-
-
-        }
+      
 
 
 

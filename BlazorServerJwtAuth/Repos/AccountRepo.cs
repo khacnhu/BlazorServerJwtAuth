@@ -9,6 +9,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
+using BlazorServerJwtAuth.Services;
 
 
 namespace BlazorServerJwtAuth.Repos
@@ -46,6 +47,7 @@ namespace BlazorServerJwtAuth.Repos
                {
                    Name = registerDTO.Name,
                    Email = registerDTO.Email,
+                   Role = registerDTO.Role,
                    Password = BCrypt.Net.BCrypt.HashPassword(registerDTO.Password)
                }
                );
@@ -70,6 +72,7 @@ namespace BlazorServerJwtAuth.Repos
                 //new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.Name!),
                 new Claim(ClaimTypes.Email, user.Email!),
+                new Claim(ClaimTypes.Role, user.Role!)
 
             };
 
@@ -77,7 +80,7 @@ namespace BlazorServerJwtAuth.Repos
                    issuer: config["Jwt:Issuer"],
                    audience: config["Jwt:Audience"],
                    claims: userClaims,
-                   expires: DateTime.Now.AddDays(2),
+                   expires: DateTime.Now.AddMinutes(1),
                    signingCredentials: credentials
                );
 
@@ -85,5 +88,20 @@ namespace BlazorServerJwtAuth.Repos
 
         }
 
+        public LoginResponse RefreshToken(UserSession userSession)
+        {
+            CustomerUserClaims customerUserClaims = DecryptJWTService.DecryptToken(userSession.JwtToken);
+            if(customerUserClaims is null )
+            {
+                return new LoginResponse(false, "Incorrect Token");
+            }
+
+            string newToken = GenerateToken(new ApplicationUser() { 
+                Name = customerUserClaims.Name, 
+                Email = customerUserClaims.Email 
+            });
+
+            return new LoginResponse(true, "NEW TOKEN" , newToken);
+        }
     }
 }

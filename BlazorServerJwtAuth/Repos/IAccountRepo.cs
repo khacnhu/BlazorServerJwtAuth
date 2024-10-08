@@ -7,6 +7,7 @@ namespace BlazorServerJwtAuth.Repos
     {
         Task<RegistrationResponse> RegisterAsync(RegisterDTO registerDTO);
         Task<LoginResponse> LoginAsync(LoginDTO loginDTO);
+        LoginResponse RefreshToken(UserSession userSession);
 
     }
 }

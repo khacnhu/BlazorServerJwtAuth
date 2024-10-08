@@ -39,7 +39,7 @@ namespace BlazorServerJwtAuth.Controllers
         }
 
         [HttpGet("weather")]
-        [Authorize]
+        [Authorize(Roles = "ADMIN")]
         public ActionResult<WeatherForecast[]> GetWeatherForeCast()
         {
 
@@ -52,13 +52,26 @@ namespace BlazorServerJwtAuth.Controllers
                 Summary = summaries[Random.Shared.Next(summaries.Length)]
             }).ToArray());
         }
-        
 
-        
-        
-        
+        [HttpPost("refreshToken")]
+        [AllowAnonymous]
+        public ActionResult<LoginResponse> RefreshToken(UserSession userSession)
+        {
+            var result = accountRepo.RefreshToken(userSession); 
+            return Ok(result);
+        }
 
-        
+        [Authorize]
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            return Ok("LOG OUT SUCCESSFULLY");
+        }
+
+
+
+
+
 
     }
 }

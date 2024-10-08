@@ -1,4 +1,4 @@
 ﻿namespace BlazorServerJwtAuth.DTOs
 {
-    public record CustomerUserClaims (string Name = null!, string Email = null!);
+    public record CustomerUserClaims (string Name = null!, string Email = null!, string Role = null!);
 }

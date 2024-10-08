@@ -1,4 +1,5 @@
-﻿using BlazorServerJwtAuth.DTOs;
+﻿using BlazorServerJwtAuth.Components.Pages;
+using BlazorServerJwtAuth.DTOs;
 using BlazorServerJwtAuth.Responses;
 using BlazorServerJwtAuth.States;
 using System.Reflection.Metadata;
@@ -17,15 +18,55 @@ namespace BlazorServerJwtAuth.Services
         public async Task<WeatherForecast[]> GetWeatherForecasts()
         {
 
-            if (Constants.JwtToken == null || Constants.JwtToken == "")
+            GetProtectedClient();
+
+            var response = await httpClient.GetAsync("api/Account/weather");
+            bool check = CheckIfAuthorized(response);
+            if (check)
             {
-                return null!;
+                await GetRefreshToken();
+                return await GetWeatherForecasts();
             }
 
-            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Constants.JwtToken);
+            return await response.Content.ReadFromJsonAsync<WeatherForecast[]>();
 
-            var response = await httpClient.GetFromJsonAsync<WeatherForecast[]>("api/Account/weather");
-            return response!;
+        }
+
+        private static bool CheckIfAuthorized (HttpResponseMessage httpResponseMessage)
+        {
+            if(httpResponseMessage.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private void GetProtectedClient()
+        {
+            if (Constants.JwtToken == "" || Constants.JwtToken == null) return;
+            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(
+                "Bearer", 
+                Constants.JwtToken
+            );
+
+        }
+
+        public void LogOut()
+        {
+            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(
+               "Bearer",
+               Constants.JwtToken
+           );
+            
+
+        }
+
+        private async Task GetRefreshToken()
+        {
+            var response = await httpClient.PostAsJsonAsync("api/Account/refreshToken", new UserSession() { JwtToken = Constants.JwtToken });
+            var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
+            Constants.JwtToken = result!.JWTToken;
+        
         }
 
         public async Task<LoginResponse> LoginService(LoginDTO loginDTO)
@@ -41,6 +82,14 @@ namespace BlazorServerJwtAuth.Services
             var response = await httpClient.PostAsJsonAsync("api/Account/register", registerDTO);
             var result = await response.Content.ReadFromJsonAsync<RegistrationResponse>();
             return result!;
+        }
+
+        public async Task<LoginResponse> RefreshToken(UserSession userSession)
+        {
+            var response = await httpClient.PostAsJsonAsync("api/Account/refreshToken", userSession);
+            var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
+            return result!;
+
         }
     }
 }
